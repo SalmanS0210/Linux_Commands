@@ -14,7 +14,7 @@ Users & Groups: Learn how to create users (useradd), manage passwords (passwd), 
 
 💡 Pro-Tip: Never log in directly as root for daily tasks. Always use a standard user with sudo privileges. It's the first rule of Linux security.
 
-2: Connectivity & Observability
+2. Connectivity & Observability
 
 This week is all about making your server talk to the world securely and figuring out what’s happening under the hood.
 
@@ -27,7 +27,7 @@ Services: Understand systemd. You should be able to start, stop, enable (start a
 
 Logs: Your primary troubleshooting tool. Learn how to navigate /var/log/syslog or /var/log/auth.log. Master journalctl to view systemd logs in real-time (journalctl -f -u nginx).
 
-3: Automation & Data Manipulation
+3. Automation & Data Manipulation
 
 Time to make Linux do the heavy lifting for you.
 
@@ -44,7 +44,7 @@ sed: Perfect for find-and-replace tasks directly inside text files.
 
 Cron Jobs: Understand the 5-star cron syntax (* * * * * -> Minute, Hour, Day of Month, Month, Day of Week). Use crontab -e to schedule your automation scripts.
 
-4: Modern Infrastructure & Troubleshooting
+4. Modern Infrastructure & Troubleshooting
 
 Tying it all together with modern deployment methods and learning how to fix things when they break.
 
@@ -58,3 +58,10 @@ CPU/Memory: top, htop, or free -m.
 Disk Space: df -h (disk usage) and du -sh * (finding large directories).
 
 App Deployment: Combine your networking and service knowledge to host a simple web page or app, ensuring firewalls (like ufw) allow the necessary traffic.
+
+
+5. Project 
+
+Final DevOps Project: Build and Configure an Ubuntu VM
+
+This project combines everything you've learned in Weeks 1–4 and simulates real-world DevOps tasks.
