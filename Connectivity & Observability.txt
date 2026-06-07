@@ -1,0 +1,560 @@
+In the cloud, "Connectivity" is about how data gets in and out (Networking & SSH), while "Observability" is about knowing what’s happening once it's inside (Services & Logs).
+
+1. Networking: The Digital Plumbing
+In Linux, networking isn't just about "being online"—it’s about managing ports and interfaces.
+
+Essential Diagnostic Tools
+ip a: Shows your IP addresses and network interfaces. Look for eth0 or ens3 (your cloud network card).
+
+ss -tulpn: The "Who is listening?" command. It shows which services are using which ports (e.g., Nginx on port 80).
+
+ping: Checks basic connectivity to another server.
+
+curl -I [URL]: Fetches the "headers" of a website to see if a web server is responding without downloading the whole page.
+
+💡 Cloud Tip: If ping or curl fails to your instance, check your Cloud Security Group/Firewall settings first. Linux might be ready, but the cloud provider might be blocking the port.
+
+2. SSH (Secure Shell): Your Remote Portal
+Since your server is in the cloud, SSH is your only way in.
+
+Key-Based Authentication
+Passwords are "brute-forceable." Keys are not.
+
+Generate a key pair on your local machine: ssh-keygen -t ed25519.
+
+Public Key (.pub): Goes on the server in ~/.ssh/authorized_keys.
+
+Private Key: Stays on your laptop. Never share this.
+
+Hardening SSH (/etc/ssh/sshd_config)
+For your final project, you'll need to edit this file to make your server safer:
+
+PasswordAuthentication no: Disables passwords entirely (keys only).
+
+PermitRootLogin no: Forces you to log in as a regular user first, then use sudo.
+
+3. Services (systemd): The Engines
+Almost everything in Linux (Nginx, Docker, Databases) runs as a service managed by systemd.
+
+The systemctl Command
+This is the only command you need to manage the "life" of a service:
+
+Bash
+sudo systemctl start nginx    # Start it now
+sudo systemctl stop nginx     # Stop it now
+sudo systemctl enable nginx   # Make it start automatically when the server boots
+sudo systemctl status nginx   # Check if it's running or if it crashed
+4. Logs: The Black Box Recorder
+When a service fails to start, the logs will tell you why. Linux stores logs in /var/log.
+
+How to Read Logs
+tail -f /var/log/syslog: "Follows" the main system log in real-time. Great for watching errors happen as you type.
+
+journalctl -u nginx: Shows logs specifically for the Nginx service.
+
+journalctl -xe: Shows the last few lines of the system log with extra detail—perfect for when a service fails to start.
+
+# Commands:
+
+1: Networking Basics
+Check IP Address
+ip addr
+
+or
+
+hostname -I
+
+Example:
+
+192.168.1.10
+Check Hostname
+hostname
+
+Change hostname:
+
+sudo hostnamectl set-hostname devops-server
+Test Connectivity
+Ping
+ping google.com
+
+Stop:
+
+Ctrl + C
+DNS Lookup
+nslookup
+nslookup google.com
+dig
+dig google.com
+
+Useful for DNS troubleshooting.
+
+2: Network Troubleshooting
+View Listening Ports
+ss -tulpn
+
+Example:
+
+tcp LISTEN 0 128 *:22
+
+Shows SSH running on port 22.
+
+Check Specific Port
+ss -tulpn | grep 80
+
+Check Nginx:
+
+ss -tulpn | grep nginx
+Check Connection to Port
+curl http://localhost
+curl http://server-ip
+Download Files
+wget https://example.com/file.zip
+
+or
+
+curl -O https://example.com/file.zip
+Routing Information
+ip route
+
+Example:
+
+default via 192.168.1.1
+
+3: SSH (Most Important DevOps Skill)
+
+SSH allows secure remote access to servers.
+
+Connect to Server
+ssh user@server-ip
+
+Example:
+
+ssh ubuntu@10.0.0.20
+Generate SSH Key Pair
+ssh-keygen
+
+Files created:
+
+~/.ssh/id_rsa
+~/.ssh/id_rsa.pub
+Copy Public Key
+ssh-copy-id ubuntu@server-ip
+
+Now login without password:
+
+ssh ubuntu@server-ip
+SSH with Private Key
+ssh -i mykey.pem ubuntu@server-ip
+
+Common in AWS EC2.
+
+Copy Files to Server
+scp app.jar ubuntu@server:/tmp/
+Copy Files from Server
+scp ubuntu@server:/tmp/app.jar .
+
+4: Service Management (systemd)
+
+Most Linux services are managed using systemd.
+
+Check Service Status
+systemctl status ssh
+
+Example:
+
+active (running)
+Start Service
+sudo systemctl start nginx
+Stop Service
+sudo systemctl stop nginx
+Restart Service
+sudo systemctl restart nginx
+Reload Configuration
+sudo systemctl reload nginx
+Enable Service on Boot
+sudo systemctl enable nginx
+Disable Service
+sudo systemctl disable nginx
+View All Services
+systemctl list-units --type=service
+
+5: Installing and Managing Nginx
+
+Install:
+
+Ubuntu
+sudo apt update
+sudo apt install nginx -y
+RHEL/CentOS
+sudo yum install nginx -y
+
+Check service:
+
+systemctl status nginx
+
+Start Nginx:
+
+sudo systemctl start nginx
+
+Verify:
+
+curl localhost
+
+You should see HTML output.
+
+6: Linux Logs
+
+Logs are the first place DevOps engineers look during incidents.
+
+System Logs Directory
+cd /var/log
+
+Common logs:
+
+/var/log/syslog
+/var/log/messages
+/var/log/auth.log
+View Logs
+cat /var/log/syslog
+
+Large files:
+
+less /var/log/syslog
+Watch Logs Live
+tail -f /var/log/syslog
+
+Very common in production support.
+
+Search Errors
+grep ERROR app.log
+
+Case insensitive:
+
+grep -i error app.log
+Count Errors
+grep ERROR app.log | wc -l
+
+7: Journalctl
+
+Systemd stores logs in journal.
+
+View Entire Journal
+journalctl
+Recent Logs
+journalctl -n 100
+Follow Logs Live
+journalctl -f
+Service Logs
+journalctl -u nginx
+
+Last 50 entries:
+
+journalctl -u nginx -n 50
+Logs Since Today
+journalctl --since today
+Troubleshooting Workflow (Real DevOps Scenario)
+Website Not Accessible
+Step 1: Check Service
+systemctl status nginx
+Step 2: Check Port
+ss -tulpn | grep 80
+Step 3: Test Locally
+curl localhost
+Step 4: Check Logs
+journalctl -u nginx
+
+or
+
+tail -f /var/log/nginx/error.log
+Step 5: Check Network
+ping server-ip
+Week 2 Hands-On Lab
+Install Nginx
+sudo apt update
+sudo apt install nginx -y
+Verify Service
+systemctl status nginx
+Verify Port
+ss -tulpn | grep 80
+Test Endpoint
+curl localhost
+Watch Logs
+tail -f /var/log/nginx/access.log
+
+Open browser:
+
+http://server-ip
+
+Watch requests appear in logs.
+
+# Interview quetions 
+
+1. Difference Between ping and curl
+ping
+
+Tests network connectivity using ICMP packets.
+
+ping google.com
+
+Checks:
+
+DNS resolution
+Network reachability
+Packet loss
+Latency
+
+Example:
+
+64 bytes from google.com
+
+curl
+
+Tests application-level connectivity (HTTP/HTTPS/API).
+
+curl https://google.com
+
+Checks:
+
+DNS resolution
+TCP connection
+HTTP/HTTPS response
+API responses
+
+Example:
+
+HTTP/1.1 200 OK
+Interview Answer
+
+ping checks whether a host is reachable over the network using ICMP, while curl checks whether an application or web service is responding over HTTP/HTTPS.
+
+2. How Does SSH Key Authentication Work?
+
+SSH uses a public-private key pair.
+
+Generate Keys
+ssh-keygen
+
+Creates:
+
+~/.ssh/id_rsa       (private key)
+~/.ssh/id_rsa.pub   (public key)
+Copy Public Key to Server
+ssh-copy-id user@server
+
+Public key stored in:
+
+~/.ssh/authorized_keys
+Authentication Process
+Client requests SSH connection.
+Server sends a challenge.
+Client signs challenge using private key.
+Server verifies using public key.
+Access granted.
+Advantages
+More secure than passwords
+Enables automation
+Common in CI/CD pipelines
+Interview Answer
+
+SSH key authentication uses a public-private key pair. The server stores the public key, and the client proves its identity by signing a challenge with the private key without transmitting the private key itself.
+
+3. Difference Between Restart and Reload in systemd
+Restart
+systemctl restart nginx
+
+What happens:
+
+Stops service completely
+Starts it again
+
+Effects:
+
+Existing connections may be interrupted
+New process is created
+Reload
+systemctl reload nginx
+
+What happens:
+
+Reloads configuration files
+Service keeps running
+
+Effects:
+
+Existing connections remain active
+No downtime (if supported)
+Example
+
+After modifying:
+
+/etc/nginx/nginx.conf
+
+Use:
+
+nginx -t
+systemctl reload nginx
+Interview Answer
+
+restart stops and starts the service, causing potential downtime. reload re-reads configuration without stopping the service, allowing configuration changes with minimal impact.
+
+4. How Do You Find Which Process Is Using Port 8080?
+Using ss
+ss -tulpn | grep 8080
+
+Example:
+
+LISTEN 0 128 *:8080 users:(("java",pid=1234))
+Using lsof
+sudo lsof -i :8080
+
+Output:
+
+COMMAND PID USER
+java    1234 app
+Using netstat
+netstat -tulpn | grep 8080
+Kill Process
+kill -9 1234
+Interview Answer
+
+I usually use ss -tulpn | grep 8080 or lsof -i :8080 to identify the process and PID listening on port 8080.
+
+5. Where Would You Check Logs If Nginx Fails to Start?
+Service Status
+systemctl status nginx
+
+First place to check.
+
+Systemd Logs
+journalctl -u nginx
+
+Recent logs:
+
+journalctl -u nginx -n 50
+Nginx Error Log
+
+Common location:
+
+/var/log/nginx/error.log
+
+View:
+
+tail -f /var/log/nginx/error.log
+Validate Configuration
+nginx -t
+
+Example error:
+
+unexpected "}" in nginx.conf
+Interview Answer
+
+I would first run systemctl status nginx, then check journalctl -u nginx, inspect /var/log/nginx/error.log, and validate the configuration using nginx -t.
+
+6. How Would You Troubleshoot a Website Returning 502/503 Errors?
+What They Mean
+502 Bad Gateway
+
+Nginx/Load Balancer cannot communicate with backend application.
+
+Example:
+
+Nginx -> Application Server
+
+Application is down.
+
+503 Service Unavailable
+
+Service unavailable due to:
+
+Application stopped
+Maintenance mode
+Resource exhaustion
+Troubleshooting Steps
+Step 1: Check Nginx
+systemctl status nginx
+Step 2: Check Backend Application
+
+Example:
+
+systemctl status myapp
+
+or
+
+docker ps
+Step 3: Check Listening Ports
+ss -tulpn
+
+Verify backend port exists:
+
+8080
+9000
+5000
+Step 4: Test Backend Directly
+curl localhost:8080
+
+Expected:
+
+200 OK
+Step 5: Check Logs
+
+Nginx:
+
+tail -f /var/log/nginx/error.log
+
+Application:
+
+journalctl -u myapp
+
+or
+
+docker logs container_name
+Step 6: Check Resources
+
+CPU:
+
+top
+
+Memory:
+
+free -m
+
+Disk:
+
+df -h
+Step 7: Verify Nginx Upstream Configuration
+
+Example:
+
+upstream app {
+    server 127.0.0.1:8080;
+}
+
+Ensure backend is actually listening on that port.
+
+Interview Answer
+
+For 502/503 errors, I first check Nginx and backend application status, verify backend ports are listening, test the backend directly using curl, review Nginx and application logs, check system resources, and validate the upstream configuration. Most 502 errors occur when the backend service is down or unreachable.
+
+Production Scenario Example
+
+User reports:
+
+https://app.company.com returns 502
+
+Commands I'd run:
+
+systemctl status nginx
+
+ss -tulpn | grep 8080
+
+curl localhost:8080
+
+journalctl -u nginx -n 50
+
+tail -f /var/log/nginx/error.log
+
+df -h
+
+free -m
+
+This sequence quickly identifies whether the issue is with Nginx, the application, networking, or server resources.
