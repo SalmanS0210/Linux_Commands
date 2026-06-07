@@ -1,0 +1,297 @@
+Final DevOps Project: Build and Configure an Ubuntu VM
+
+This project combines everything you've learned in Weeks 1–4 and simulates real-world DevOps tasks.
+
+Architecture
+Ubuntu VM
+│
+├── SSH Access
+├── Users & Groups
+├── Nginx Web Server
+├── Backup Automation
+├── Cron Jobs
+├── Log Monitoring
+└── Docker Container
+Step 1: Create Ubuntu VM
+
+You can use:
+
+VirtualBox + Ubuntu Server
+VMware Workstation
+AWS EC2 Ubuntu Instance
+Azure VM
+Google Cloud VM
+
+Verify access:
+
+hostname
+ip addr
+Step 2: Configure SSH Access
+
+Install SSH Server:
+
+sudo apt update
+sudo apt install openssh-server -y
+
+Verify:
+
+systemctl status ssh
+
+Enable at boot:
+
+sudo systemctl enable ssh
+
+Check port:
+
+ss -tulpn | grep 22
+Configure SSH Key Authentication
+
+Generate key on client machine:
+
+ssh-keygen
+
+Copy key:
+
+ssh-copy-id ubuntu@SERVER_IP
+
+Test login:
+
+ssh ubuntu@SERVER_IP
+Step 3: Create Users and Groups
+
+Create group:
+
+sudo groupadd devops
+
+Create users:
+
+sudo useradd -m engineer1
+sudo useradd -m engineer2
+
+Set passwords:
+
+sudo passwd engineer1
+sudo passwd engineer2
+
+Add users to group:
+
+sudo usermod -aG devops engineer1
+sudo usermod -aG devops engineer2
+
+Verify:
+
+groups engineer1
+
+Expected:
+
+engineer1 : engineer1 devops
+Step 4: Install and Configure Nginx
+
+Install:
+
+sudo apt install nginx -y
+
+Start:
+
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+Check:
+
+systemctl status nginx
+
+Open browser:
+
+http://SERVER_IP
+
+You should see the Nginx welcome page.
+
+Create Custom Web Page
+sudo vim /var/www/html/index.html
+
+Content:
+
+<h1>DevOps Final Project</h1>
+<p>Nginx Successfully Deployed</p>
+
+Verify:
+
+curl localhost
+Step 5: Write Backup Script
+
+Create script directory:
+
+sudo mkdir -p /opt/scripts
+
+Create backup script:
+
+sudo vim /opt/scripts/backup.sh
+
+Content:
+
+#!/bin/bash
+
+DATE=$(date +%F)
+
+tar -czf /tmp/nginx-backup-$DATE.tar.gz /var/www/html
+
+echo "$(date) Backup Completed" >> /var/log/backup.log
+
+Make executable:
+
+sudo chmod +x /opt/scripts/backup.sh
+
+Test:
+
+sudo /opt/scripts/backup.sh
+
+Verify:
+
+ls -ltr /tmp
+Step 6: Schedule Cron Job
+
+Edit cron:
+
+crontab -e
+
+Add:
+
+0 1 * * * /opt/scripts/backup.sh
+
+Meaning:
+
+Daily at 1:00 AM
+
+Verify:
+
+crontab -l
+Step 7: Monitor Logs
+
+Watch Nginx access logs:
+
+tail -f /var/log/nginx/access.log
+
+Watch Nginx errors:
+
+tail -f /var/log/nginx/error.log
+
+System logs:
+
+journalctl -f
+Create Log Monitoring Script
+vim /opt/scripts/log_monitor.sh
+#!/bin/bash
+
+ERRORS=$(grep -c ERROR /var/log/nginx/error.log)
+
+echo "$(date) Errors Found: $ERRORS" >> /var/log/error-monitor.log
+
+Make executable:
+
+chmod +x /opt/scripts/log_monitor.sh
+
+Run every 10 minutes:
+
+*/10 * * * * /opt/scripts/log_monitor.sh
+Step 8: Install Docker
+
+Install:
+
+sudo apt install docker.io -y
+
+Enable:
+
+sudo systemctl enable docker
+sudo systemctl start docker
+
+Verify:
+
+docker --version
+docker ps
+Step 9: Deploy Docker Container
+
+Pull image:
+
+docker pull nginx
+
+Run container:
+
+docker run -d \
+--name docker-nginx \
+-p 8080:80 \
+nginx
+
+Verify:
+
+docker ps
+
+Test:
+
+curl localhost:8080
+
+Browser:
+
+http://SERVER_IP:8080
+Step 10: Docker Monitoring
+
+View logs:
+
+docker logs docker-nginx
+
+Live logs:
+
+docker logs -f docker-nginx
+
+Enter container:
+
+docker exec -it docker-nginx bash
+Validation Checklist
+
+Run these commands and verify:
+
+SSH
+systemctl status ssh
+
+✅ Active
+
+Users
+cat /etc/group | grep devops
+
+✅ engineer1 and engineer2 present
+
+Nginx
+systemctl status nginx
+
+✅ Running
+
+Website
+curl localhost
+
+✅ Custom HTML page returned
+
+Backup
+ls /tmp/nginx-backup*
+
+✅ Backup archive exists
+
+Cron
+crontab -l
+
+✅ Scheduled jobs visible
+
+Logs
+tail /var/log/backup.log
+
+✅ Backup entries present
+
+Docker
+docker ps
+
+✅ docker-nginx running
+
+Expected Interview Explanation
+
+I built an Ubuntu VM and configured SSH key-based access, created users and groups, installed and configured Nginx, developed automated backup and log-monitoring scripts, scheduled them with cron, and deployed an Nginx container using Docker. I validated services using systemctl, monitored logs using journalctl and tail, and verified container health using Docker commands.
+
+
+This project demonstrates Linux administration, scripting, networking, service management, automation, logging, and Docker fundamentals—the core skills expected of a junior DevOps engineer.
