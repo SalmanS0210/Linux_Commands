@@ -1,0 +1,345 @@
+What is Linux?
+
+Linux is an operating system used on:
+
+Servers
+Cloud VMs
+Containers
+Kubernetes nodes
+
+1. The Linux Filesystem Hierarchy
+Unlike Windows, which uses separate drive letters (C:, D:), Linux organizes everything into a single inverted tree structure starting from the Root directory (/). Every single file, folder, and device is a branch on this tree.
+Key Directories You Must Know:
+
+/etc: The central command post. This contains almost all system and application configuration files (e.g., /etc/passwd, /etc/ssh/sshd_config)
+/home: The personal quarters. Every standard user gets a subdirectory here (e.g., /home/john) to store their personal files.
+/var: Variable data. This is where files that constantly change live—most importantly, system logs (/var/log).
+/bin & /sbin: Where the power tools live. These contain essential command binaries (like ls, cd, grep) needed to boot and run the system.
+
+Core Navigation Commands:Bash
+pwd              # "Print Working Directory" - shows exactly where you are standing
+ls -la           # List all files, including hidden ones (filenames starting with a dot)
+cd /etc          # Change directory to /etc (Absolute path)
+cd ../           # Move up one level (Relative path)
+cd -             # Toggle back to the previous directory you were in
+
+
+2. Linux Permissions (The Security Gate)
+Linux is built from the ground up to be a multi-user system, meaning security boundaries are strictly enforced. Every file and directory has an owner and a specific set of permissions.
+If you run ls -l, you will see a string that looks like this: -rwxr-xr--
+
+Breaking Down the String:
+The First Character: Tells you the file type (- means regular file, d means directory).
+The Three Triplets: * User (Owner): What the person who owns the file can do.
+         Group: What members of the file's assigned group can do.
+         Others: What everyone else on the system can do.
+
+The Two Ways to Change Permissions (chmod):
+Symbolic Mode (Beginner Friendly): Uses letters to add (+) or remove (-) permissions.
+Bash
+chmod +x script.sh      # Give everyone execute permissions
+chmod g-w report.txt    # Remove write permission from the group
+
+Absolute (Numeric) Mode (Pro Level): 
+
+Uses a 3-digit octal number representing User, Group, and Others.
+read (r) = 4
+write (w) = 2
+execute (x) = 1
+
+Add them together to get your number. For example: rwx ($4+2+1=7$) and r-x ($4+0+1=5$).
+Bash
+chmod 755 script.sh     # Owner: rwx (7), Group: r-x (5), Others: r-x (5)
+chmod 644 config.txt    # Owner: rw- (6), Group: r-- (4), Others: r-- (4)
+
+To change who owns the file, use chown:
+Bash
+sudo chown john:developers file.txt   # Changes owner to 'john' and group to 'developers'
+
+3. Users & Groups
+Every process that runs on Linux runs under the context of a user.
+
+Critical User Types:
+Root User (UID 0): The absolute administrator. Root can bypass all permission checks and delete the entire system with a single command.
+System Users (UID 1-999): Non-human accounts used by services (like nginx or mysql) so they don’t have to run with dangerous root privileges.
+Regular Users (UID 1000+): Real people (like you!).
+Managing Accounts:
+Bash
+sudo useradd -m -s /bin/bash alice   # Create user 'alice' with a home directory and bash shell
+sudo passwd alice                    # Set or change Alice's password
+sudo groupadd DevOps                 # Create a new group called 'DevOps'
+sudo usermod -aG DevOps alice       # Append (-a) Alice to the 'DevOps' group (-G)
+
+The Power of sudo
+Because logging in as root is a massive security risk, standard administrators use sudo (Superuser Do). This allows a regular user to execute a single command with root privileges, which is logged for accountability.To give a user sudo rights on Ubuntu, you simply add them to the system's sudo group:
+Bash
+sudo usermod -aG sudo alice
+
+
+Basic Commands
+Check Current Directory
+pwd
+Output:
+
+/home/Salman
+List Files
+ls
+
+Detailed view:
+
+ls -l
+
+Show hidden files:
+
+ls -la
+Change Directory
+cd /etc
+
+Go home:
+
+cd ~
+
+Go back:
+
+cd -
+Clear Terminal
+clear
+
+or
+
+Ctrl + L
+Day 2: Files and Directories
+Create Directory
+mkdir devops
+
+Create nested directories:
+
+mkdir -p project/app/logs
+Create Files
+touch file1.txt
+
+Multiple files:
+
+touch app.log error.log users.txt
+Copy Files
+cp source.txt backup.txt
+
+Copy directory:
+
+cp -r folder1 folder2
+Move/Rename Files
+mv old.txt new.txt
+
+Move file:
+
+mv file.txt /tmp/
+Delete Files
+rm file.txt
+
+Delete directory:
+
+rm -r folder
+
+Force delete:
+
+rm -rf folder
+
+⚠️ Dangerous:
+
+rm -rf /
+
+Never run it.
+
+Day 3: Viewing File Contents
+Display Entire File
+cat file.txt
+View Large Files
+less logfile.log
+
+Navigation:
+
+Space → Next page
+b     → Previous page
+q     → Quit
+First Lines
+head file.txt
+
+First 20 lines:
+
+head -20 file.txt
+Last Lines
+tail file.txt
+
+Live logs:
+tail -f app.log
+
+Very important for DevOps.
+
+Day 4: Linux File System
+Important Directories
+/
+├── bin
+├── boot
+├── dev
+├── etc
+├── home
+├── opt
+├── proc
+├── tmp
+├── usr
+└── var
+Most Important
+/etc
+
+Configuration files
+
+cd /etc
+
+Examples:
+
+/etc/passwd
+/etc/hosts
+/etc/ssh/
+/var
+
+Logs
+
+/var/log
+
+Examples:
+
+tail -f /var/log/syslog
+/home
+
+User home directories
+
+/home/user1
+/home/user2
+/tmp
+
+Temporary files
+
+cd /tmp
+Day 5: File Permissions
+
+Check permissions:
+
+ls -l
+
+Example:
+
+-rwxr-xr--
+
+Breakdown:
+
+- rwx r-x r--
+
+Owner:
+
+rwx
+
+Group:
+
+r-x
+
+Others:
+
+r--
+Permission Meanings
+Read
+r = 4
+Write
+w = 2
+Execute
+x = 1
+Numeric Permissions
+777
+rwxrwxrwx
+755
+rwxr-xr-x
+
+Common for scripts.
+
+chmod 755 deploy.sh
+644
+rw-r--r--
+
+Common for config files.
+
+chmod 644 config.yaml
+Change Permissions
+chmod 755 script.sh
+
+Add execute permission:
+
+chmod +x script.sh
+Day 6: Users and Groups
+Check Current User
+whoami
+User Information
+id
+
+Example:
+
+uid=1000(ubuntu)
+gid=1000(ubuntu)
+Create User
+sudo useradd devops
+
+Create home directory:
+
+sudo useradd -m devops
+
+Set password:
+
+sudo passwd devops
+Switch User
+su - devops
+Delete User
+sudo userdel devops
+
+Delete home directory too:
+
+sudo userdel -r devops
+Day 7: Groups
+Create Group
+sudo groupadd developers
+Add User to Group
+sudo usermod -aG developers devops
+
+Check groups:
+
+groups devops
+Change Ownership
+
+Change owner:
+
+sudo chown devops file.txt
+
+Change owner and group:
+
+sudo chown devops:developers file.txt
+Practice Lab
+
+Create a DevOps practice environment:
+
+mkdir devops-lab
+cd devops-lab
+
+touch deploy.sh
+
+chmod 755 deploy.sh
+
+sudo useradd -m engineer1
+
+sudo groupadd devops
+
+sudo usermod -aG devops engineer1
+
+sudo chown engineer1:devops deploy.sh
+
+ls -l
+
+Expected output:
+
+-rwxr-xr-x 1 engineer1 devops deploy.sh
