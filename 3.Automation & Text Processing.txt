@@ -1,0 +1,610 @@
+Instead of typing the same five commands every morning, you will write a script to do it for you, use text processing to extract only the data you care about, and use cron jobs to run it while you sleep.
+
+1. Bash Scripting: The Blueprint
+A Bash script is simply a text file containing a list of commands that the system executes from top to bottom.
+
+The Anatomy of a Script
+Every script must start with a Shebang (#!/bin/bash). This tells Linux exactly which interpreter to use to read the file.
+
+Bash
+#!/bin/bash
+
+# 1. Variables (No spaces around the '=' sign!)
+SERVER_NAME="Production-01"
+LOG_DIR="/var/log/nginx"
+
+# 2. Conditionals (if/else)
+if [ -d "$LOG_DIR" ]; then
+    echo "Directory exists. Backing up $SERVER_NAME logs..."
+else
+    echo "Error: $LOG_DIR not found!"
+    exit 1
+fi
+⚠️ Crucial Step: When you create a script, it is just a text file. You must give it execute permissions before it can run:
+
+chmod +x myscript.sh
+
+Then run it with: ./myscript.sh
+
+2. Text Processing: The "Big Three"
+Servers generate massive amounts of text files and logs. You need tools to slice, dice, and find data instantly without opening files in a text editor.
+
+grep (The Finder)
+Used to search files for specific text patterns (Regular Expressions).
+
+Example: Find all lines containing the word "Failed" in the authentication log:
+
+Bash
+grep "Failed" /var/log/auth.log
+awk (The Column Extractor)
+awk views text files as a grid of columns separated by spaces or tabs. $1 is column 1, $2 is column 2, etc.
+
+Example: Extract only the IP addresses (typically column 1) from an Nginx access log:
+
+Bash
+awk '{print $1}' /var/log/nginx/access.log
+sed (The Stream Editor / Replacer)
+sed is used to find and replace text on the fly without opening the file. The syntax is s/old/new/g.
+
+Example: Change the port number in a config file from 8080 to 9090:
+
+Bash
+sed -i 's/8080/9090/g' config.txt
+(The -i flag means "in-place", meaning it directly overwrites the file).
+
+3. Cron Jobs: The Time Machine
+cron is a time-based job scheduler daemon in Linux. You use it to automate repetitive tasks like daily backups or log rotations.
+
+The Cron Syntax
+You edit your automated task list by running crontab -e. Each job follows a 5-star schedule syntax:
+
+Plaintext
+ .---------------- minute (0 - 59)
+ |  .------------- hour (0 - 23)
+ |  |  .---------- day of month (1 - 31)
+ |  |  |  .------- month (1 - 12)
+ |  |  |  |  .---- day of week (0 - 6) (Sunday to Saturday)
+ * * * * * /path/to/command
+Common Cron Examples:
+Run a script every single minute: * * * * * /home/ubuntu/script.sh
+
+Run a backup daily at 2:30 AM: 30 2 * * * /home/ubuntu/backup.sh
+
+Run a script every Sunday at midnight: 0 0 * * 0 /home/ubuntu/cleanup.sh
+
+# Commands 
+
+Learn automation using Bash scripts and powerful Linux text-processing tools that DevOps engineers use daily.
+
+1: Bash Scripting Basics
+
+What is Bash?
+
+Bash (Bourne Again Shell) is the default shell in most Linux systems.
+
+Create a script:
+
+vim hello.sh
+#!/bin/bash
+
+echo "Hello DevOps"
+
+Give execute permission:
+
+chmod +x hello.sh
+
+Run:
+
+./hello.sh
+
+Output:
+
+Hello DevOps
+Variables
+#!/bin/bash
+
+NAME="Salman"
+
+echo $NAME
+
+Output:
+
+Salman
+User Input
+#!/bin/bash
+
+read -p "Enter Name: " NAME
+
+echo "Welcome $NAME"
+Command Output to Variable
+DATE=$(date)
+
+echo $DATE
+
+2: Conditions and Loops
+If Statement
+#!/bin/bash
+
+NUM=10
+
+if [ $NUM -gt 5 ]
+then
+    echo "Greater"
+fi
+If Else
+#!/bin/bash
+
+NUM=2
+
+if [ $NUM -gt 5 ]
+then
+    echo "Greater"
+else
+    echo "Smaller"
+fi
+For Loop
+#!/bin/bash
+
+for i in {1..5}
+do
+    echo $i
+done
+
+Output:
+
+1
+2
+3
+4
+5
+While Loop
+COUNT=1
+
+while [ $COUNT -le 5 ]
+do
+   echo $COUNT
+   COUNT=$((COUNT+1))
+done
+
+3: Functions & Exit Codes
+Function
+#!/bin/bash
+
+backup() {
+    echo "Taking Backup..."
+}
+
+backup
+Exit Codes
+ls file.txt
+echo $?
+
+Output:
+
+0 = Success
+1+ = Error
+Error Handling
+#!/bin/bash
+
+if ! systemctl is-active nginx >/dev/null
+then
+    echo "Nginx is down"
+    exit 1
+fi
+
+echo "Nginx running"
+
+4: grep (Search Tool)
+Search Word
+grep ERROR app.log
+Ignore Case
+grep -i error app.log
+Count Matches
+grep -c ERROR app.log
+Show Line Numbers
+grep -n ERROR app.log
+
+Output:
+
+15: ERROR Database failed
+Recursive Search
+grep -r "database" .
+Practical DevOps Examples
+
+Find failed logins:
+
+grep "Failed password" /var/log/auth.log
+
+Find HTTP 500 errors:
+
+grep "500" access.log
+
+5: awk (Data Extraction Tool)
+Print Specific Column
+
+Example file:
+
+users.txt
+
+John 5000
+Mike 7000
+David 9000
+
+Command:
+
+awk '{print $1}' users.txt
+
+Output:
+
+John
+Mike
+David
+Print Second Column
+awk '{print $2}' users.txt
+
+Output:
+
+5000
+7000
+9000
+Filter Data
+awk '$2 > 6000' users.txt
+
+Output:
+
+Mike 7000
+David 9000
+CPU Usage Example
+top -bn1 | grep Cpu
+
+or
+
+df -h | awk '{print $5}'
+
+6: sed (Stream Editor)
+Replace Text
+sed 's/dev/prod/' file.txt
+Replace Globally
+sed 's/dev/prod/g' file.txt
+Edit File Directly
+sed -i 's/dev/prod/g' config.yaml
+Delete Line
+sed '3d' file.txt
+
+Delete empty lines:
+
+sed '/^$/d' file.txt
+DevOps Example
+
+Update application version:
+
+sed -i 's/v1/v2/g' deployment.yaml
+
+7: Cron Jobs
+
+Cron automates scheduled tasks.
+
+View Cron Jobs
+crontab -l
+Edit Cron Jobs
+crontab -e
+Cron Format
+* * * * * command
+│ │ │ │ │
+│ │ │ │ └ Day of Week (0-7)
+│ │ │ └ Month
+│ │ └ Day of Month
+│ └ Hour
+└ Minute
+Examples
+Every Minute
+* * * * * /home/ubuntu/script.sh
+Every Day at Midnight
+0 0 * * * /home/ubuntu/backup.sh
+Every 5 Minutes
+*/5 * * * * /home/ubuntu/check.sh
+Every Sunday
+0 2 * * 0 /home/ubuntu/weekly-backup.sh
+
+Runs at:
+
+Sunday 2:00 AM
+Real DevOps Scripts
+Check Nginx and Restart
+#!/bin/bash
+
+if ! systemctl is-active nginx >/dev/null
+then
+    echo "$(date) - Nginx Down" >> /tmp/nginx.log
+
+    systemctl restart nginx
+fi
+
+Cron:
+
+*/5 * * * * /opt/scripts/check_nginx.sh
+Disk Usage Monitoring
+#!/bin/bash
+
+USAGE=$(df -h / | awk 'NR==2 {print $5}' | tr -d '%')
+
+if [ $USAGE -gt 80 ]
+then
+    echo "Disk Usage Critical: $USAGE%"
+fi
+Backup Script
+#!/bin/bash
+
+tar -czf backup.tar.gz /var/www
+
+echo "Backup completed"
+
+Cron:
+
+0 1 * * * /opt/scripts/backup.sh
+Practice Lab
+Create users file
+cat > users.txt << EOF
+John 5000
+Mike 7000
+David 9000
+EOF
+grep
+grep Mike users.txt
+awk
+awk '{print $1}' users.txt
+sed
+sed 's/Mike/Admin/' users.txt
+cron
+
+Create script:
+
+echo "date >> /tmp/test.log" > test.sh
+chmod +x test.sh
+
+Schedule:
+
+* * * * * /home/user/test.sh
+
+Check:
+
+cat /tmp/test.log
+
+
+# Interview Questions
+
+1. What is the Difference Between grep, awk, and sed?
+Command	Purpose	Used For
+grep	Search text	Find matching lines
+awk	Process structured data	Extract columns, calculations
+sed	Edit/transform text	Replace, delete, modify text
+grep Example
+
+Find "ERROR" in a log file:
+
+grep ERROR app.log
+
+Output:
+
+ERROR Database Connection Failed
+ERROR API Timeout
+awk Example
+
+Extract the first column:
+
+awk '{print $1}' users.txt
+
+Input:
+
+John 5000
+Mike 7000
+David 9000
+
+Output:
+
+John
+Mike
+David
+sed Example
+
+Replace text:
+
+sed 's/dev/prod/g' config.txt
+
+Input:
+
+dev-server
+
+Output:
+
+prod-server
+Interview Answer
+
+grep is used for searching patterns, awk is used for extracting and processing columns of data, and sed is used for editing and transforming text streams.
+
+2. How Do You Pass Arguments to a Bash Script?
+Script
+#!/bin/bash
+
+echo "First Argument: $1"
+echo "Second Argument: $2"
+
+Run:
+
+./script.sh Salman DevOps
+
+Output:
+
+First Argument: Salman
+Second Argument: DevOps
+Useful Positional Parameters
+$0  -> Script name
+$1  -> First argument
+$2  -> Second argument
+$#  -> Number of arguments
+$@  -> All arguments
+
+Example:
+
+echo "Total Args: $#"
+Interview Answer
+
+Arguments are passed using positional parameters like $1, $2, etc. $# gives the number of arguments and $@ contains all arguments.
+
+3. What is $? in Linux?
+
+$? stores the exit status of the last executed command.
+
+Example
+ls
+echo $?
+
+Output:
+
+0
+Failed Command
+ls file_not_exist
+echo $?
+
+Output:
+
+2
+Common Exit Codes
+Code	Meaning
+0	Success
+1	General error
+2	Misuse/No such file
+127	Command not found
+Example in Script
+cp file.txt backup/
+
+if [ $? -eq 0 ]
+then
+    echo "Backup Successful"
+else
+    echo "Backup Failed"
+fi
+Interview Answer
+
+$? contains the exit status of the previously executed command. A value of 0 indicates success, while non-zero values indicate errors.
+
+4. How Do You Schedule a Job Every 10 Minutes?
+
+Edit cron:
+
+crontab -e
+
+Add:
+
+*/10 * * * * /opt/scripts/check.sh
+
+Meaning:
+
+*/10 = Every 10 minutes
+
+Runs at:
+
+00
+10
+20
+30
+40
+50
+Verify
+crontab -l
+Interview Answer
+
+I use cron with the expression */10 * * * * command, which executes the command every 10 minutes.
+
+5. How Do You Replace Text in a File Using sed?
+Display Change Only
+sed 's/dev/prod/' file.txt
+Replace All Occurrences
+sed 's/dev/prod/g' file.txt
+Modify File Directly
+sed -i 's/dev/prod/g' file.txt
+
+Example:
+
+Input:
+
+dev-server
+dev-db
+
+Command:
+
+sed -i 's/dev/prod/g' config.txt
+
+Output:
+
+prod-server
+prod-db
+Interview Answer
+
+I use sed substitution syntax such as sed -i 's/old/new/g' filename to replace text directly in a file.
+
+6. How Would You Monitor Disk Usage Using a Shell Script?
+Script
+#!/bin/bash
+
+USAGE=$(df -h / | awk 'NR==2 {print $5}' | tr -d '%')
+
+if [ "$USAGE" -gt 80 ]
+then
+    echo "Disk Usage Critical: ${USAGE}%"
+else
+    echo "Disk Usage Normal: ${USAGE}%"
+fi
+Explanation
+
+Get filesystem usage:
+
+df -h /
+
+Example:
+
+Filesystem Size Used Avail Use%
+/dev/sda1 50G 42G 8G 84%
+
+Extract usage:
+
+awk 'NR==2 {print $5}'
+
+Output:
+
+84%
+
+Remove %:
+
+tr -d '%'
+
+Compare:
+
+if [ "$USAGE" -gt 80 ]
+Schedule with Cron
+*/5 * * * * /opt/scripts/disk_check.sh
+
+Runs every 5 minutes.
+
+Production Version
+#!/bin/bash
+
+USAGE=$(df -h / | awk 'NR==2 {print $5}' | tr -d '%')
+
+if [ "$USAGE" -gt 80 ]
+then
+    echo "Disk Usage Alert: ${USAGE}%" \
+    | mail -s "Disk Alert" admin@company.com
+fi
+Interview Answer
+
+I use df -h to get disk utilization, awk to extract the usage percentage, and a Bash if condition to trigger alerts when usage exceeds a threshold such as 80%. The script can be scheduled with cron for continuous monitoring.
+
+Quick One-Line Interview Summary
+grep → Search text.
+awk → Extract/process columns.
+sed → Modify text.
+$? → Exit status of last command.
+Cron every 10 min → */10 * * * *.
+Replace text → sed -i 's/old/new/g' file.
+Disk monitoring → df + awk + if condition + cron.
