@@ -1,0 +1,612 @@
+are moving away from treating a server like a pet (manually installing things on the host) and treating it like cattle (using Docker containers for reproducible deployments). You will also learn how to rescue a server when it runs out of memory or disk space.
+
+1. Docker on Linux: Isolated Environments
+In traditional hosting, if you install two applications that need different versions of Node.js, your server breaks. Docker solves this by putting applications into Containers—isolated packets containing the app and only the dependencies it needs to run.
+
+Core Docker Commands to Master:
+Bash
+# 1. Download an image from Docker Hub
+docker pull nginx:alpine
+
+# 2. Run a container in the background (-d) and map port 8080 on your host to port 80 inside the container (-p)
+docker run -d -p 8080:80 --name my-web-app nginx:alpine
+
+# 3. See what containers are actively running
+docker ps
+
+# 4. Check the logs generated inside a container
+docker logs my-web-app
+
+# 5. Stop and destroy the container
+docker stop my-web-app && docker rm my-web-app
+2. System Troubleshooting: The Medic Toolkit
+When a production server goes down or acts sluggishly, you must check three distinct resources immediately: CPU, Memory, and Disk.
+
+Scenario A: The Server is Slow / Unresponsive (CPU & Memory)
+top or htop: Your system dashboard. It shows you exactly which process is chewing up your CPU and RAM. (Use htop if available; it's much easier to read).
+
+free -m: Shows total, used, and available RAM in Megabytes. If "available" is close to 0, Linux will start killing processes randomly to save itself.
+
+Scenario B: Applications are Crashing with "No Space Left" (Disk)
+df -h: Shows disk space utilization across the system in a human-readable format (-h). Look for any partition sitting at 100%.
+
+du -sh *: Run this inside a bloated directory to see exactly how much space each individual folder is consuming. (Excellent for tracking down massive, unrotated log files).
+
+3. Deploying a Simple Application
+For your project, you'll practice deploying an isolated application. Instead of messing with host-level configurations, you will wrap your code up and let Docker expose it securely.
+
+The Lifecycle of a Quick Deployment:
+[Write Code/Fetch Image] ──> [Run docker run with Port Mapping] ──> [Configure Host Firewall/UFW]
+To test if your application is fully isolated and running properly:
+
+Bash
+curl -I localhost:8080
+
+# Commands 
+
+Learn containerization, basic troubleshooting, and application deployment—the core of modern DevOps.
+
+Part 1: Docker on Linux
+What is Docker?
+
+Docker packages an application and its dependencies into a container.
+
+Benefits:
+
+Consistent environments
+Easy deployment
+Fast startup
+Isolation
+Install Docker (Ubuntu)
+sudo apt update
+sudo apt install docker.io -y
+
+Start Docker:
+
+sudo systemctl start docker
+sudo systemctl enable docker
+
+Verify:
+
+docker --version
+docker info
+Basic Docker Commands
+Check Running Containers
+docker ps
+
+All containers:
+
+docker ps -a
+Pull Image
+docker pull nginx
+Run Container
+docker run -d -p 80:80 --name mynginx nginx
+
+Options:
+
+-d → Detached mode
+-p → Port mapping
+--name → Container name
+Check Logs
+docker logs mynginx
+
+Live logs:
+
+docker logs -f mynginx
+Enter Container
+docker exec -it mynginx bash
+Stop Container
+docker stop mynginx
+Remove Container
+docker rm mynginx
+Remove Image
+docker rmi nginx
+Docker Architecture
+Docker Client
+      |
+Docker Daemon
+      |
+-------------------
+| Container       |
+| Container       |
+| Container       |
+-------------------
+Build Your First Docker Image
+
+Create application:
+
+mkdir app
+cd app
+app.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def hello():
+    return "Hello DevOps"
+
+app.run(host="0.0.0.0", port=5000)
+requirements.txt
+flask
+Dockerfile
+FROM python:3.11
+
+WORKDIR /app
+
+COPY . .
+
+RUN pip install -r requirements.txt
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+Build Image
+docker build -t flask-app .
+Run Application
+docker run -d -p 5000:5000 flask-app
+
+Verify:
+
+curl localhost:5000
+
+Output:
+
+Hello DevOps
+Part 2: System Troubleshooting
+CPU Issues
+
+Check CPU usage:
+
+top
+
+or
+
+htop
+
+Find top processes:
+
+ps aux --sort=-%cpu | head
+Memory Issues
+
+Check memory:
+
+free -m
+
+Detailed:
+
+vmstat
+
+Find memory-hungry processes:
+
+ps aux --sort=-%mem | head
+Disk Issues
+df -h
+
+Find large directories:
+
+du -sh /*
+
+Largest files:
+
+find / -type f -size +500M
+Network Issues
+
+Check connectivity:
+
+ping google.com
+
+Check ports:
+
+ss -tulpn
+
+Test service:
+
+curl localhost
+Process Issues
+
+Find process:
+
+ps aux | grep nginx
+
+Kill process:
+
+kill PID
+
+Force kill:
+
+kill -9 PID
+Log Analysis
+
+System logs:
+
+journalctl -xe
+
+Service logs:
+
+journalctl -u nginx
+
+Docker logs:
+
+docker logs container_name
+Troubleshooting Scenario 1
+Website Down
+
+Check:
+
+systemctl status nginx
+
+If stopped:
+
+sudo systemctl restart nginx
+
+Check port:
+
+ss -tulpn | grep 80
+
+Check logs:
+
+tail -f /var/log/nginx/error.log
+Troubleshooting Scenario 2
+Disk Full
+
+Check:
+
+df -h
+
+Find culprit:
+
+du -sh /var/*
+
+Delete old logs:
+
+find /var/log -type f -name "*.log" -mtime +30
+Part 3: Deploy a Simple Application
+Option 1: Deploy Nginx Website
+
+Create directory:
+
+mkdir website
+cd website
+index.html
+<h1>Hello DevOps Engineer</h1>
+
+Run Nginx Container:
+
+docker run -d \
+-p 80:80 \
+-v $(pwd):/usr/share/nginx/html \
+nginx
+
+Access:
+
+http://SERVER-IP
+Option 2: Deploy Flask Application
+
+Create:
+
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Application Running"
+
+app.run(host="0.0.0.0")
+
+Run:
+
+python app.py
+
+Verify:
+
+curl localhost:5000
+Real DevOps Deployment Flow
+Developer
+    ↓
+Git Commit
+    ↓
+CI/CD Pipeline
+    ↓
+Docker Build
+    ↓
+Docker Registry
+    ↓
+Server Deployment
+    ↓
+Health Check
+    ↓
+Production
+Hands-On Project
+Step 1
+
+Install Docker.
+
+docker --version
+Step 2
+
+Run Nginx.
+
+docker run -d -p 80:80 nginx
+Step 3
+
+Verify.
+
+curl localhost
+Step 4
+
+Check logs.
+
+docker logs <container-id>
+Step 5
+
+Stop container.
+
+docker stop <container-id>
+Step 6
+
+Build Flask image.
+
+docker build -t flask-app .
+Step 7
+
+Run application.
+
+docker run -d -p 5000:5000 flask-app
+
+
+
+# Interview Questions
+
+1. What is the Difference Between a Docker Image and a Container?
+Docker Image
+A read-only template used to create containers.
+Contains application code, libraries, dependencies, and configuration.
+Similar to a class in programming.
+
+Example:
+
+docker pull nginx
+
+Here nginx is an image.
+
+Docker Container
+A running instance of an image.
+Has its own process, network, and filesystem.
+Similar to an object created from a class.
+
+Example:
+
+docker run nginx
+
+Creates a container from the nginx image.
+
+Interview Answer
+
+A Docker image is a packaged blueprint containing the application and its dependencies, while a Docker container is a running instance of that image.
+
+2. What Does docker run -d -p 80:80 nginx Do?
+
+Command:
+
+docker run -d -p 80:80 nginx
+
+Breakdown:
+
+Option	Meaning
+docker run	Create and start container
+-d	Run in background (detached mode)
+-p 80:80	Map host port 80 to container port 80
+nginx	Image name
+
+Flow:
+
+Browser
+   |
+Host:80
+   |
+Container:80 (Nginx)
+
+Verify:
+
+docker ps
+curl localhost
+Interview Answer
+
+It starts an Nginx container in detached mode and maps port 80 on the host to port 80 inside the container so the application is accessible externally.
+
+3. What is a Dockerfile?
+
+A Dockerfile is a text file containing instructions to build a Docker image.
+
+Example:
+
+FROM python:3.11
+
+WORKDIR /app
+
+COPY . .
+
+RUN pip install -r requirements.txt
+
+CMD ["python", "app.py"]
+
+Build:
+
+docker build -t myapp .
+Common Instructions
+Instruction	Purpose
+FROM	Base image
+WORKDIR	Working directory
+COPY	Copy files
+RUN	Execute command during build
+EXPOSE	Document application port
+CMD	Default startup command
+Interview Answer
+
+A Dockerfile is a set of instructions used to build a Docker image automatically and consistently.
+
+4. How Do You Check Container Logs?
+View Logs
+docker logs container_name
+
+Example:
+
+docker logs myapp
+Follow Logs Live
+docker logs -f myapp
+Last 100 Lines
+docker logs --tail 100 myapp
+Interview Answer
+
+I use docker logs <container-name> to view logs and docker logs -f <container-name> to stream logs in real time.
+
+5. How Do You Enter a Running Container?
+Interactive Shell
+docker exec -it container_name bash
+
+Example:
+
+docker exec -it myapp bash
+If Bash Is Not Available
+docker exec -it myapp sh
+Interview Answer
+
+I use docker exec -it <container-name> bash to get an interactive shell inside the running container.
+
+Troubleshooting Interview Questions
+6. A Server Is Slow. What Would You Check First?
+CPU
+top
+
+or
+
+htop
+Memory
+free -m
+Disk
+df -h
+Load Average
+uptime
+
+Example:
+
+load average: 12.5, 10.2, 8.3
+
+High load indicates system stress.
+
+Interview Answer
+
+I first check CPU, memory, disk utilization, and load average using top, free -m, df -h, and uptime to identify resource bottlenecks.
+
+7. Disk Usage Is 100%. How Do You Investigate?
+Check Filesystem Usage
+df -h
+Find Large Directories
+du -sh /*
+Largest Directories
+du -ah / | sort -rh | head -20
+Find Large Files
+find / -type f -size +500M
+Check Logs
+du -sh /var/log/*
+Docker Cleanup
+docker system df
+docker system prune -a
+Interview Answer
+
+I use df -h to identify the full filesystem, then du, find, and log analysis to locate large files or directories. For Docker hosts, I also check unused images and containers.
+
+8. How Do You Identify a Process Consuming High CPU?
+Using top
+top
+Sort by CPU
+ps aux --sort=-%cpu | head
+
+Example:
+
+USER PID %CPU COMMAND
+root 1234 85.0 java
+Detailed Process Info
+ps -fp 1234
+Kill Process
+kill 1234
+
+Force:
+
+kill -9 1234
+Interview Answer
+
+I use top or ps aux --sort=-%cpu | head to identify high CPU-consuming processes and investigate the corresponding application or service.
+
+9. A Website Is Down. What Steps Would You Take?
+Step 1: Check Service
+systemctl status nginx
+Step 2: Check Ports
+ss -tulpn | grep 80
+Step 3: Test Locally
+curl localhost
+Step 4: Check Logs
+journalctl -u nginx -n 50
+tail -f /var/log/nginx/error.log
+Step 5: Check DNS
+dig domain.com
+Step 6: Check Firewall
+sudo ufw status
+Step 7: Check Backend
+curl localhost:8080
+Interview Answer
+
+I verify the web service status, confirm the listening port, test locally with curl, review application and web server logs, check DNS resolution, firewall rules, and backend application health.
+
+10. How Do You Troubleshoot a Container That Keeps Restarting?
+Check Container Status
+docker ps -a
+Inspect Logs
+docker logs container_name
+
+Most issues are visible here.
+
+Inspect Exit Code
+docker inspect container_name
+
+Look for:
+
+"ExitCode": 1
+Verify Environment Variables
+docker inspect container_name
+
+Check:
+
+"Env": []
+Run Container Manually
+docker run -it image_name sh
+
+Test startup commands manually.
+
+Check Resource Limits
+docker stats
+Common Causes
+Wrong startup command
+Missing environment variables
+Application crash
+Port conflicts
+Database connection failure
+Out-of-memory (OOMKilled)
+Interview Answer
+
+I check docker logs, inspect the container exit code, verify environment variables and configuration, run the container interactively if needed, and check for resource constraints such as memory issues or port conflicts.
+
+Quick DevOps Interview Revision
+Scenario	Command
+High CPU	top, ps aux --sort=-%cpu
+High Memory	free -m, top
+Disk Full	df -h, du -sh, find
+Website Down	systemctl, curl, ss, logs
+Container Crash	docker logs, docker inspect
+View Logs	journalctl, tail -f
+Container Shell	docker exec -it <container> bash
+Running Containers	docker ps
+Port Check	ss -tulpn
+DNS Check	dig, nslookup
